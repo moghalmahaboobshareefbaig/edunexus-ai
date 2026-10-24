@@ -16,7 +16,7 @@ import type {
   CreateInterventionPayload,
 } from '../types';
 
-const FALLBACK_STUDENTS: StudentListItem[] = [
+export const FALLBACK_STUDENTS: StudentListItem[] = [
   {
     id: '0411a66b-943d-46d5-895d-28026b071aab',
     student_id: 'STU-001',
