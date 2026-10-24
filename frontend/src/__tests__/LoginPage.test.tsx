@@ -130,4 +130,40 @@ describe('LoginPage and Registration Flow Verification', () => {
     expect(emailInput.value).toBe('jwatson@edunexus.ai');
     expect(passwordInput.value).toBe('SecurePass@2026');
   });
+
+  it('successfully signs in with newly registered credentials without "Invalid login credentials" error', async () => {
+    renderLoginPage();
+
+    // 1. Register a new user
+    fireEvent.click(screen.getByRole('button', { name: /Create Account \/ Register/i }));
+    fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Ishita Verma' } });
+    fireEvent.change(screen.getByLabelText(/Institutional Email Address/i), { target: { value: 'ishita@edunexus.ai' } });
+    fireEvent.change(screen.getByLabelText(/Create Password/i), { target: { value: 'EduSecure@2026' } });
+    fireEvent.change(screen.getByLabelText(/Confirm Password/i), { target: { value: 'EduSecure@2026' } });
+    fireEvent.click(screen.getByRole('button', { name: /Complete Registration & Create Account/i }));
+
+    // Wait for transition to Sign In form
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1, name: /Sign in to EduNexus AI/i })).toBeInTheDocument();
+    });
+
+    // 2. Submit the Sign In form with the registered credentials
+    const submitButtons = screen.getAllByRole('button', { name: /^Sign In$/i });
+    const submitButton = submitButtons.find((btn) => btn.getAttribute('type') === 'submit') || submitButtons[submitButtons.length - 1];
+    fireEvent.click(submitButton);
+
+    // Verify signIn was called with the user's registered role and email without throwing "Invalid login credentials"
+    await waitFor(() => {
+      expect(mockAuth.signIn).toHaveBeenCalledWith(
+        expect.stringContaining('edunexus-demo-'),
+        expect.objectContaining({
+          role: 'advisor',
+          email: 'ishita@edunexus.ai',
+        })
+      );
+    });
+
+    // Verify no error alert is present
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });

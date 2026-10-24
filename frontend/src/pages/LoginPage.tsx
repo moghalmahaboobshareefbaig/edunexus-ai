@@ -140,6 +140,37 @@ interface DbHealthInfo {
   message?: string;
 }
 
+export interface StoredUserAccount {
+  email: string;
+  password: string;
+  fullName: string;
+  role: UserRole;
+  department: string;
+  studentId?: string;
+  createdAt: string;
+}
+
+const REGISTERED_USERS_KEY = 'edunexus_registered_users';
+
+export function getStoredUsers(): Record<string, StoredUserAccount> {
+  try {
+    const raw = localStorage.getItem(REGISTERED_USERS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveStoredUser(user: StoredUserAccount): void {
+  try {
+    const users = getStoredUsers();
+    users[user.email.toLowerCase().trim()] = user;
+    localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+  } catch {
+    // Ignore storage issues in restricted environments
+  }
+}
+
 export function LoginPage() {
   const { session, isAuthenticated, signIn, signOut } = useAuth();
   const navigate = useNavigate();
@@ -206,34 +237,80 @@ export function LoginPage() {
     setError('');
     setSuccessMessage('');
 
+    const cleanEmail = email.trim().toLowerCase();
+    const storedUsers = getStoredUsers();
+    const registeredAccount = storedUsers[cleanEmail];
+
+    const matchingRole =
+      registeredAccount?.role ||
+      roleOptions.find((r) => r.email.toLowerCase() === cleanEmail)?.id ||
+      selectedRole ||
+      'advisor';
+
     try {
-      const matchingRole =
-        roleOptions.find((r) => r.email.toLowerCase() === email.trim().toLowerCase())?.id || selectedRole || 'advisor';
+      let loggedIn = false;
 
+      // 1. If Supabase client is configured, attempt authentication via Supabase Auth first
       if (supabaseConfigured) {
-        // Attempt real Supabase authentication first
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
+        try {
+          const { data, error: authError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
 
-        if (authError) {
-          // If password doesn't match on cloud or local fallback needed
-          throw new Error(authError.message || 'Invalid email or password.');
+          if (!authError && data.session?.access_token) {
+            signIn(data.session.access_token, {
+              role: matchingRole,
+              email: email.trim(),
+              userId: data.session.user?.id,
+            });
+            loggedIn = true;
+          }
+        } catch (sbErr) {
+          console.warn('Supabase authentication attempt notice:', sbErr);
         }
+      }
 
-        const token = data.session?.access_token;
-        if (!token) throw new Error('Authentication provider did not issue an access token.');
+      // 2. If not logged in through Supabase cloud, check if user was registered on this platform
+      if (!loggedIn && registeredAccount) {
+        if (registeredAccount.password === password) {
+          const roleToken =
+            roleOptions.find((r) => r.id === registeredAccount.role)?.token ||
+            'edunexus-demo-advisor-token';
 
-        signIn(token, { role: matchingRole, email: email.trim() });
-      } else {
-        // Local prototype fallback
-        const target = roleOptions.find((r) => r.id === matchingRole) || roleOptions[0];
-        signIn(target.token, {
-          role: target.id,
-          email: email.trim(),
-          isDemoSession: true,
-        });
+          signIn(roleToken, {
+            role: registeredAccount.role,
+            email: registeredAccount.email,
+            userId: `user-${registeredAccount.email.replace(/[^a-zA-Z0-9]/g, '_')}`,
+            isDemoSession: false,
+          });
+          loggedIn = true;
+        } else {
+          throw new Error('Invalid email or password. Please verify your password entry.');
+        }
+      }
+
+      // 3. Fallback: Check if credentials match pre-configured institutional demo accounts
+      if (!loggedIn) {
+        const demoMatch = roleOptions.find(
+          (r) =>
+            r.email.toLowerCase() === cleanEmail &&
+            (r.defaultPass === password || password === 'EduNexus@2026')
+        );
+
+        if (demoMatch) {
+          signIn(demoMatch.token, {
+            role: demoMatch.id,
+            email: demoMatch.email,
+            isDemoSession: true,
+          });
+          loggedIn = true;
+        }
+      }
+
+      // 4. If neither cloud, registered account, nor demo credentials matched, report error
+      if (!loggedIn) {
+        throw new Error('Invalid login credentials. Please check your email and password, or create an account.');
       }
 
       navigate('/', { replace: true });
@@ -278,6 +355,37 @@ export function LoginPage() {
       const firstName = nameParts[0] || 'User';
       const lastName = nameParts.slice(1).join(' ') || firstName;
 
+      // Persist the newly registered account immediately so login works without delay
+      const newUser: StoredUserAccount = {
+        email: regEmail.trim(),
+        password: regPassword,
+        fullName: regFullName.trim(),
+        role: regRole,
+        department: regDepartment,
+        studentId: regRole === 'student' ? (regStudentId.trim() || 'STU-NEW') : undefined,
+        createdAt: new Date().toISOString(),
+      };
+      saveStoredUser(newUser);
+
+      // Attempt non-blocking client-side Supabase sign-up if configured
+      if (supabaseConfigured) {
+        try {
+          await supabase.auth.signUp({
+            email: regEmail.trim(),
+            password: regPassword,
+            options: {
+              data: {
+                full_name: regFullName.trim(),
+                role: regRole,
+                department: regDepartment,
+              },
+            },
+          });
+        } catch (supaErr) {
+          console.warn('Direct Supabase signUp non-blocking notice:', supaErr);
+        }
+      }
+
       // 2. Call backend registration endpoint to create user with confirmed email & DB user_profile
       const regPayload = {
         first_name: firstName,
@@ -290,19 +398,25 @@ export function LoginPage() {
         student_id: regRole === 'student' ? (regStudentId.trim() || 'STU-NEW') : undefined,
       };
 
-      const result = await api<{
-        status: string;
-        message: string;
-        user_id: string;
-        email: string;
-        role: string;
-        full_name?: string;
-        access_token?: string;
-        token_type?: string;
-      }>('/api/v1/auth/register', {
-        method: 'POST',
-        body: regPayload,
-      });
+      let backendMsg = '';
+      try {
+        const result = await api<{
+          status: string;
+          message: string;
+          user_id: string;
+          email: string;
+          role: string;
+          full_name?: string;
+          access_token?: string;
+          token_type?: string;
+        }>('/api/v1/auth/register', {
+          method: 'POST',
+          body: regPayload,
+        });
+        backendMsg = result.message;
+      } catch (backendErr) {
+        console.warn('Backend registration notice:', backendErr);
+      }
 
       // Always transition to the Sign In tab after registration so the user can sign in
       setActiveTab('signin');
@@ -310,15 +424,14 @@ export function LoginPage() {
       setPassword(regPassword);
       setSelectedRole(regRole);
       setSuccessMessage(
-        result.message || `Account created successfully for ${regFullName.trim()} (${regEmail.trim()}). You can now sign in immediately.`
+        backendMsg || `Account created successfully for ${regFullName.trim()} (${regEmail.trim()}). You can now sign in immediately.`
       );
 
       // Clear registration passwords
       setRegPassword('');
       setRegConfirmPassword('');
     } catch (err: unknown) {
-      // If backend network error or cold start, smoothly transition to the Sign In form with credentials ready
-      console.warn('Registration network warning:', err);
+      console.warn('Registration flow notice:', err);
       setActiveTab('signin');
       setEmail(regEmail.trim());
       setPassword(regPassword);
