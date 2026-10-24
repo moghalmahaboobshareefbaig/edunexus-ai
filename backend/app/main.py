@@ -24,11 +24,11 @@ def create_application() -> FastAPI:
         openapi_url="/openapi.json",
     )
 
-    # Configure CORS - allows local development origins and any Render-deployed frontend
+    # Configure CORS - allows local development origins, Render, and Vercel frontends
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
-        allow_origin_regex=r"^https://.*\.onrender\.com$",
+        allow_origin_regex=r"^https://.*(\.onrender\.com|\.vercel\.app)$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

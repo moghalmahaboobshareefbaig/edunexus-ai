@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
+    "build": "cd frontend && npm install && npm run build && node -e \"const fs=require('fs'); fs.cpSync('dist', '../dist', {recursive:true});\"",
     "start": "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}",
     "dev": "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}",
     "test": "cd frontend && npm test"

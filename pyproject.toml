@@ -1,0 +1,23 @@
+[project]
+name = "edunexus-ai"
+version = "1.0.0"
+description = "Student Success & Journey Intelligence Platform API — KPMG India Prototype"
+readme = "README.md"
+requires-python = ">=3.11, <3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "supabase>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pandas>=2.2.0",
+    "numpy>=2.0.0",
+    "pydantic>=2.0.0",
+    "python-multipart>=0.0.9",
+    "pytest>=8.0.0",
+    "httpx>=0.27.0",
+    "email-validator>=2.0.0",
+    "PyJWT[crypto]>=2.10.0",
+]
+
+[tool.vercel]
+entrypoint = "main:app"
