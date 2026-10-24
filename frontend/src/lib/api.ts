@@ -1,6 +1,8 @@
 // EduNexus AI — API fetch wrapper for backend calls with in-memory caching and request deduplication
 
-const DEFAULT_API_URL = 'http://localhost:8000';
+const DEFAULT_API_URL = import.meta.env.PROD
+  ? 'https://edunexus-ai-api-z0v1.onrender.com'
+  : 'http://localhost:8000';
 const API_URL = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/$/, '');
 export const apiUrl = (endpoint: string) => `${API_URL}${endpoint}`;
 
