@@ -35,5 +35,9 @@ services:
         value: https://blgqapkuizpyaqgyqftt.supabase.co
       - key: SUPABASE_JWT_ISSUER
         value: https://blgqapkuizpyaqgyqftt.supabase.co/auth/v1
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
       - key: ALLOWED_ORIGINS
         value: https://edunexus-ai-web.onrender.com,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://localhost:4173
