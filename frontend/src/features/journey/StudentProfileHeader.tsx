@@ -71,12 +71,28 @@ export const StudentProfileHeader: React.FC<StudentProfileHeaderProps> = ({
               <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 {student.status.toUpperCase()}
               </span>
+              {student.cgpa != null && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
+                  CGPA: {typeof student.cgpa === 'number' ? student.cgpa.toFixed(2) : student.cgpa} / 10
+                </span>
+              )}
+              {student.backlogs != null && (
+                <span
+                  className={`text-xs font-semibold px-2 py-0.5 rounded border ${
+                    student.backlogs > 0
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                  }`}
+                >
+                  {student.backlogs === 0 ? '0 Backlogs' : `${student.backlogs} ${student.backlogs === 1 ? 'Backlog' : 'Backlogs'}`}
+                </span>
+              )}
             </div>
 
             <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300">
               <span className="flex min-w-0 items-start gap-1">
                 <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-400" />
-                <span className="min-w-0 break-words">{department}</span>
+                <span className="min-w-0 break-words">{department || student.department || 'General'}</span>
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="min-w-0 break-words">
@@ -84,6 +100,12 @@ export const StudentProfileHeader: React.FC<StudentProfileHeaderProps> = ({
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="min-w-0">Section {student.section || 'A'}</span>
+              {student.gender && (
+                <>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="min-w-0 text-slate-300">Gender: {student.gender}</span>
+                </>
+              )}
             </p>
 
             <div className="flex min-w-0 flex-wrap items-start gap-x-3 gap-y-1 pt-0.5 text-[11px] text-slate-400">
@@ -96,7 +118,19 @@ export const StudentProfileHeader: React.FC<StudentProfileHeaderProps> = ({
                 <Calendar className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" />
                 <span className="min-w-0 break-words">Enrolled: {student.enrollment_date}</span>
               </span>
+              {student.date_of_birth && (
+                <>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="min-w-0 break-words">DOB: {student.date_of_birth}</span>
+                </>
+              )}
             </div>
+
+            {student.notes && (
+              <p className="text-[11px] text-indigo-200/80 italic pt-0.5 truncate">
+                Advisory note: {student.notes}
+              </p>
+            )}
           </div>
         </div>
 

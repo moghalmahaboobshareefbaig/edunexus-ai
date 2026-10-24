@@ -10,6 +10,14 @@ export interface Student {
   current_grade?: string;
   academic_term?: string;
   section?: string;
+  department?: string;
+  cgpa?: number | null;
+  backlogs?: number | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  notes?: string | null;
+  advisor_id?: string | null;
+  user_id?: string | null;
   enrollment_date: string;
   status: 'active' | 'inactive' | 'graduated' | 'transferred' | 'withdrawn' | 'suspended' | 'on_leave';
   created_at?: string;

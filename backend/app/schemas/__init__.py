@@ -151,3 +151,10 @@ __all__ = [
     "StudentComprehensiveDossier",
 ]
 
+
+from app.schemas.auth import (
+    UserRegisterRequest,
+    UserRegisterResponse,
+    DemoCredentialInfo,
+    DemoCredentialsListResponse,
+)
