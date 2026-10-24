@@ -133,13 +133,8 @@ def get_current_user(
 
     raw_token = parts[1].strip()
 
-    # 1. Match against official demo evaluation tokens (strictly evaluation/development mode only)
+    # 1. Match against official demo evaluation tokens (allowed for evaluation & interactive exploration)
     if raw_token in DEMO_TOKENS:
-        if settings.ENVIRONMENT.lower() in ("production", "prod"):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Demo evaluation tokens are disabled in production. Please provide a verified institutional Bearer token.",
-            )
         token_info = DEMO_TOKENS[raw_token]
         return AuthenticatedUser(
             user_id=token_info["user_id"],

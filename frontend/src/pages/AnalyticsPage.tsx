@@ -20,6 +20,9 @@ import {
   Lightbulb,
   CheckCircle2,
   AlertTriangle,
+  UploadCloud,
+  Trophy,
+  TrendingUp,
 } from 'lucide-react';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { Button } from '../components/ui/Button';
@@ -255,15 +258,16 @@ export function AnalyticsPage() {
       </div>
 
       {/* ── Departmental Comparison Analysis ─────────────────────────── */}
-      <Card className="border-slate-200/80 dark:border-[#35433B] shadow-xs">
+      <Card className="border-2 border-indigo-100 dark:border-[#35433B] shadow-md rounded-2xl overflow-hidden">
+        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-emerald-500 to-amber-500" />
         <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-none bg-indigo-50 dark:bg-[#1D332A] text-indigo-700 dark:text-[#56B594] shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20">
                 <BarChart3 className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-base font-semibold text-slate-900 dark:text-[#E2ECE6]">
+                <CardTitle className="text-base font-bold text-slate-900 dark:text-[#E2ECE6] flex items-center gap-2">
                   Departmental Performance & Success Benchmark
                 </CardTitle>
                 <CardDescription className="text-xs text-slate-500 dark:text-[#8FA89B]">
@@ -271,21 +275,86 @@ export function AnalyticsPage() {
                 </CardDescription>
               </div>
             </div>
-            <Badge variant="neutral" className="bg-slate-100 dark:bg-[#1D2722] text-slate-700 dark:text-[#CBD5CF] border-slate-200 dark:border-[#35433B] text-xs shrink-0 self-start sm:self-auto">
-              {cohorts.length} Departments Tracked
-            </Badge>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+              <Link
+                to="/data-hub"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/35 transition-all duration-200 hover:-translate-y-0.5"
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span>Add Department Data (CSV)</span>
+              </Link>
+
+              <Badge variant="neutral" className="bg-indigo-50 dark:bg-[#1D2722] text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-[#35433B] text-xs font-semibold shrink-0">
+                {cohorts.length} Departments Tracked
+              </Badge>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {cohorts.length > 0 ? (
             <>
+              {/* Vibrant KPI Pills */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50/50 dark:from-[#1A2420] dark:to-[#17201B] border border-indigo-100 dark:border-indigo-900/40 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Trophy className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <div className="truncate">
+                    <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 block tracking-wider">Top Benchmark</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate block">
+                      {cohorts.reduce((max, c) => ((c.average_success_score || 0) > (max.average_success_score || 0) ? c : max), cohorts[0])?.department || 'Engineering'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50/50 dark:from-[#1A2420] dark:to-[#17201B] border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block tracking-wider">Mean Attendance</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+                      {Math.round(cohorts.reduce((acc, c) => acc + (c.average_attendance || 0), 0) / cohorts.length)}% Institutional Rate
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-[#1A2420] dark:to-[#17201B] border border-amber-100 dark:border-amber-900/40 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 block tracking-wider">Total Enrolled Cohort</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+                      {cohorts.reduce((acc, c) => acc + (c.count || 0), 0)} Enrolled Students
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Luminous Recharts Bar Chart */}
               <div className="h-72 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={cohorts}
                     margin={{ top: 10, right: 15, left: -20, bottom: 20 }}
                   >
+                    <defs>
+                      <linearGradient id="successGradBar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#818CF8" />
+                        <stop offset="100%" stopColor="#4F46E5" />
+                      </linearGradient>
+                      <linearGradient id="attendanceGradBar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#34D399" />
+                        <stop offset="100%" stopColor="#059669" />
+                      </linearGradient>
+                      <linearGradient id="assessmentGradBar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FBBF24" />
+                        <stop offset="100%" stopColor="#EA580C" />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                     <XAxis
                       dataKey="department"
@@ -302,11 +371,12 @@ export function AnalyticsPage() {
                     <Tooltip
                       contentStyle={{
                         backgroundColor: 'var(--tooltip-bg, #ffffff)',
-                        borderRadius: 0,
+                        borderRadius: '12px',
                         border: '1px solid var(--tooltip-border, #e2e8f0)',
                         color: 'var(--tooltip-text, #1e293b)',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        boxShadow: '0 8px 16px -2px rgb(0 0 0 / 0.12)',
                         fontSize: '12px',
+                        fontWeight: 600,
                       }}
                       formatter={(val: any, name: any) => [
                         val != null ? `${val}%` : 'Not recorded',
@@ -320,29 +390,29 @@ export function AnalyticsPage() {
                     <Bar
                       dataKey="average_success_score"
                       name="Student Success Score"
-                      fill="#4f46e5"
-                      radius={[4, 4, 0, 0]}
+                      fill="url(#successGradBar)"
+                      radius={[6, 6, 0, 0]}
                     />
                     <Bar
                       dataKey="average_attendance"
                       name="Attendance Rate (%)"
-                      fill="#0d9488"
-                      radius={[4, 4, 0, 0]}
+                      fill="url(#attendanceGradBar)"
+                      radius={[6, 6, 0, 0]}
                     />
                     <Bar
                       dataKey="average_assessment"
                       name="Assessment Average (%)"
-                      fill="#d97706"
-                      radius={[4, 4, 0, 0]}
+                      fill="url(#assessmentGradBar)"
+                      radius={[6, 6, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
-              {/* Department Metrics Table */}
-              <div className="overflow-x-auto rounded-none border border-slate-200 dark:border-[#35433B] mt-2">
+              {/* Department Metrics Table with Mini Progress Bars */}
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-[#35433B] mt-2 shadow-2xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#EEF2F6] dark:bg-[#1D2722] border-b border-slate-200 dark:border-[#35433B] text-slate-700 dark:text-[#CBD5CF] font-semibold uppercase tracking-wider text-[11px]">
+                  <thead className="bg-[#EEF2F6] dark:bg-[#1D2722] border-b border-slate-200 dark:border-[#35433B] text-slate-700 dark:text-[#CBD5CF] font-bold uppercase tracking-wider text-[11px]">
                     <tr>
                       <th className="py-2.5 px-3">Department</th>
                       <th className="py-2.5 px-3">Students</th>
@@ -354,28 +424,65 @@ export function AnalyticsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#25322B] text-slate-700 dark:text-[#CBD5CF]">
                     {cohorts.map((c) => (
-                      <tr key={c.department} className="hover:bg-slate-50/70 dark:hover:bg-[#1D2722]/60 transition-colors">
-                        <td className="py-2 px-3 font-semibold text-slate-900 dark:text-[#E2ECE6]">{c.department}</td>
-                        <td className="py-2 px-3 text-slate-700 dark:text-[#CBD5CF]">{c.count} students</td>
-                        <td className="py-2 px-3">
-                          <span className="font-bold text-indigo-700 dark:text-[#56B594]">
-                            {c.average_success_score != null ? `${c.average_success_score} / 100` : '—'}
+                      <tr key={c.department} className="hover:bg-indigo-50/40 dark:hover:bg-[#1D2722]/60 transition-colors">
+                        <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-[#E2ECE6] flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                          <span>{c.department}</span>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-700 dark:text-[#CBD5CF]">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold">
+                            {c.count} students
                           </span>
                         </td>
-                        <td className="py-2 px-3">
-                          <span className="font-medium text-teal-700 dark:text-[#5EEAD4]">
-                            {c.average_attendance != null ? `${c.average_attendance}%` : '—'}
-                          </span>
+                        <td className="py-2.5 px-3">
+                          <div className="space-y-1">
+                            <span className="font-bold text-indigo-700 dark:text-indigo-400">
+                              {c.average_success_score != null ? `${c.average_success_score} / 100` : '—'}
+                            </span>
+                            {c.average_success_score != null && (
+                              <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"
+                                  style={{ width: `${Math.min(100, Math.max(0, c.average_success_score))}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </td>
-                        <td className="py-2 px-3">
-                          <span className="font-medium text-amber-700 dark:text-[#F6D289]">
-                            {c.average_assessment != null ? `${c.average_assessment}%` : '—'}
-                          </span>
+                        <td className="py-2.5 px-3">
+                          <div className="space-y-1">
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                              {c.average_attendance != null ? `${c.average_attendance}%` : '—'}
+                            </span>
+                            {c.average_attendance != null && (
+                              <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full"
+                                  style={{ width: `${Math.min(100, Math.max(0, c.average_attendance))}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </td>
-                        <td className="py-2 px-3 text-right">
+                        <td className="py-2.5 px-3">
+                          <div className="space-y-1">
+                            <span className="font-semibold text-amber-700 dark:text-amber-400">
+                              {c.average_assessment != null ? `${c.average_assessment}%` : '—'}
+                            </span>
+                            {c.average_assessment != null && (
+                              <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                                  style={{ width: `${Math.min(100, Math.max(0, c.average_assessment))}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
                           <Link
                             to={`/students?search=${encodeURIComponent(c.department)}`}
-                            className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 dark:text-[#56B594] dark:hover:text-[#7FE3BC] font-medium hover:underline"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold hover:bg-indigo-100 transition-colors"
                           >
                             <span>Filter</span>
                             <ArrowRight className="w-3 h-3" />
