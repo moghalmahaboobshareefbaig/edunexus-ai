@@ -1,33 +1,27 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
+  "framework": "vite",
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/main.py"
-    },
-    {
-      "source": "/docs",
-      "destination": "/main.py"
-    },
-    {
-      "source": "/redoc",
-      "destination": "/main.py"
-    },
-    {
-      "source": "/openapi.json",
-      "destination": "/main.py"
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/api/$1"
     },
     {
       "source": "/health",
-      "destination": "/main.py"
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/health"
     },
     {
-      "source": "/health/(.*)",
-      "destination": "/main.py"
+      "source": "/docs",
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/docs"
     },
     {
-      "source": "/((?!assets/|favicon\\.svg|icons\\.svg|probe\\.bin|.*\\..*).*)",
+      "source": "/openapi.json",
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/openapi.json"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

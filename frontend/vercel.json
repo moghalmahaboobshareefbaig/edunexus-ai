@@ -1,0 +1,27 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/api/$1"
+    },
+    {
+      "source": "/health",
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/health"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/docs"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://edunexus-ai-api-z0v1.onrender.com/openapi.json"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
