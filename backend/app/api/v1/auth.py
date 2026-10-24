@@ -45,6 +45,12 @@ async def register_user(payload: UserRegisterRequest) -> UserRegisterResponse:
             detail=f"Unsupported role '{payload.role}'. Permitted: administrator, advisor, faculty, student, counselor",
         )
 
+    effective_full_name = (
+        payload.full_name
+        or f"{payload.first_name or ''} {payload.last_name or ''}".strip()
+        or "Institutional User"
+    )
+
     if not is_database_configured():
         # Fallback for prototype mode without database
         import uuid
@@ -55,7 +61,7 @@ async def register_user(payload: UserRegisterRequest) -> UserRegisterResponse:
             user_id=simulated_id,
             email=payload.email,
             role=normalized_role,
-            full_name=payload.full_name,
+            full_name=effective_full_name,
             is_active=True,
         )
 
@@ -70,7 +76,9 @@ async def register_user(payload: UserRegisterRequest) -> UserRegisterResponse:
                 "password": payload.password,
                 "email_confirm": True,
                 "user_metadata": {
-                    "full_name": payload.full_name,
+                    "full_name": effective_full_name,
+                    "first_name": payload.first_name or effective_full_name.split()[0],
+                    "last_name": payload.last_name or (effective_full_name.split()[1] if len(effective_full_name.split()) > 1 else ""),
                     "role": normalized_role,
                     "department": payload.department or "",
                     "student_id": payload.student_id or "",
@@ -97,7 +105,9 @@ async def register_user(payload: UserRegisterRequest) -> UserRegisterResponse:
                                 "password": payload.password,
                                 "email_confirm": True,
                                 "user_metadata": {
-                                    "full_name": payload.full_name,
+                                    "full_name": effective_full_name,
+                                    "first_name": payload.first_name or effective_full_name.split()[0],
+                                    "last_name": payload.last_name or (effective_full_name.split()[1] if len(effective_full_name.split()) > 1 else ""),
                                     "role": normalized_role,
                                     "department": payload.department or "",
                                     "student_id": payload.student_id or "",
@@ -123,7 +133,7 @@ async def register_user(payload: UserRegisterRequest) -> UserRegisterResponse:
             client.table("user_profiles").upsert({
                 "id": user_id,
                 "email": payload.email,
-                "full_name": payload.full_name,
+                "full_name": effective_full_name,
                 "role": normalized_role,
                 "institution_department": payload.department or None,
                 "is_active": True,
@@ -146,7 +156,7 @@ async def register_user(payload: UserRegisterRequest) -> UserRegisterResponse:
                     "student_id": student_id_val,
                 }).eq("id", rec_id).execute()
             else:
-                names = payload.full_name.strip().split(" ", 1)
+                names = effective_full_name.strip().split(" ", 1)
                 first_name = names[0]
                 last_name = names[1] if len(names) > 1 else "Student"
                 client.table("students").insert({
@@ -163,11 +173,11 @@ async def register_user(payload: UserRegisterRequest) -> UserRegisterResponse:
 
         return UserRegisterResponse(
             status="success",
-            message=f"Registration successful for {payload.full_name} ({payload.email}) as {normalized_role}. You can now sign in immediately.",
+            message=f"Registration successful for {effective_full_name} ({payload.email}) as {normalized_role}. You can now sign in immediately.",
             user_id=user_id,
             email=payload.email,
             role=normalized_role,
-            full_name=payload.full_name,
+            full_name=effective_full_name,
             is_active=True,
         )
 

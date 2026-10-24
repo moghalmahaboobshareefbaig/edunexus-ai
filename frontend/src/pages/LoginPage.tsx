@@ -293,8 +293,15 @@ export function LoginPage() {
     setSubmitting(true);
 
     try {
-      // 1. Call backend registration endpoint to create user with confirmed email & DB user_profile
+      // 1. Derive first and last name for maximum backend compatibility
+      const nameParts = regFullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || 'User';
+      const lastName = nameParts.slice(1).join(' ') || firstName;
+
+      // 2. Call backend registration endpoint to create user with confirmed email & DB user_profile
       const regPayload = {
+        first_name: firstName,
+        last_name: lastName,
         full_name: regFullName.trim(),
         email: regEmail.trim(),
         password: regPassword,
@@ -309,11 +316,24 @@ export function LoginPage() {
         user_id: string;
         email: string;
         role: string;
-        full_name: string;
+        full_name?: string;
+        access_token?: string;
+        token_type?: string;
       }>('/api/v1/auth/register', {
         method: 'POST',
         body: regPayload,
       });
+
+      // If backend returns an access_token, automatically log the user in immediately
+      if (result.access_token) {
+        signIn(result.access_token, {
+          role: regRole,
+          email: regEmail.trim(),
+          isDemoSession: false,
+        });
+        navigate('/', { replace: true });
+        return;
+      }
 
       // After registration, show the login form (Sign In tab) with registration success message
       // and prefill the credentials so the user can easily log in.

@@ -10,7 +10,9 @@ class UserRegisterRequest(BaseModel):
     """Payload for registering a new user in Supabase Auth & user_profiles."""
     email: EmailStr = Field(..., description="Institutional email address")
     password: str = Field(..., min_length=6, max_length=72, description="Password (at least 6 characters)")
-    full_name: str = Field(..., min_length=2, max_length=100, description="Full Name of the user")
+    full_name: Optional[str] = Field(default=None, max_length=100, description="Full Name of the user")
+    first_name: Optional[str] = Field(default=None, max_length=100, description="First Name of the user")
+    last_name: Optional[str] = Field(default=None, max_length=100, description="Last Name of the user")
     role: str = Field(default="advisor", description="Institutional role: advisor, faculty, student, administrator, or counselor")
     department: Optional[str] = Field(default=None, max_length=100, description="Academic department / school")
     student_id: Optional[str] = Field(default=None, max_length=32, description="Optional Student ID / Roll number if registering as a student")
@@ -24,7 +26,9 @@ class UserRegisterResponse(BaseModel):
     email: str
     role: str
     full_name: str
+    access_token: Optional[str] = None
     is_active: bool = True
+    is_demo: Optional[bool] = None
 
 
 class DemoCredentialInfo(BaseModel):
