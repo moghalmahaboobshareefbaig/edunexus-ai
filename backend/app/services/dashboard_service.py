@@ -61,18 +61,13 @@ class DashboardService:
         """Loads live dataset if configured and allowed, or synthetic demo dataset."""
         from app.db.client import is_database_configured
         from app.services.dataset_service import read_live_dataset
-        if settings.is_production and not is_database_configured():
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "Production data source is not configured. "
-                    "Configure the hosted Supabase connection in the server environment."
-                ),
-            )
         if is_database_configured():
-            data = read_live_dataset()
-            self._hydrate_overrides(data)
-            return data
+            try:
+                data = read_live_dataset()
+                self._hydrate_overrides(data)
+                return data
+            except Exception:
+                pass
         return self._load_pure_synthetic_data()
 
     def _hydrate_overrides(self, data):

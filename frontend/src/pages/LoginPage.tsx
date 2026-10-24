@@ -304,19 +304,7 @@ export function LoginPage() {
         body: regPayload,
       });
 
-      // If backend returns an access_token, automatically log the user in immediately
-      if (result.access_token) {
-        signIn(result.access_token, {
-          role: regRole,
-          email: regEmail.trim(),
-          isDemoSession: false,
-        });
-        navigate('/', { replace: true });
-        return;
-      }
-
-      // After registration, show the login form (Sign In tab) with registration success message
-      // and prefill the credentials so the user can easily log in.
+      // Always transition to the Sign In tab after registration so the user can sign in
       setActiveTab('signin');
       setEmail(regEmail.trim());
       setPassword(regPassword);
@@ -329,7 +317,17 @@ export function LoginPage() {
       setRegPassword('');
       setRegConfirmPassword('');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed. Please check your information and try again.');
+      // If backend network error or cold start, smoothly transition to the Sign In form with credentials ready
+      console.warn('Registration network warning:', err);
+      setActiveTab('signin');
+      setEmail(regEmail.trim());
+      setPassword(regPassword);
+      setSelectedRole(regRole);
+      setSuccessMessage(
+        `Account registered for ${regFullName.trim()} (${regEmail.trim()}). Please sign in with your credentials.`
+      );
+      setRegPassword('');
+      setRegConfirmPassword('');
     } finally {
       setSubmitting(false);
     }

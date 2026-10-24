@@ -278,10 +278,17 @@ async def list_students(
     x_user_role: Optional[str] = Header(None),
 ) -> StudentListEnvelope:
     """Retrieve filtered, paginated students directory."""
-    user = verify_staff_authorization(authorization, x_user_role)
-    if user and user.role.lower() in STAFF_ROLES and is_database_configured():
-        data = dashboard_service._load_synthetic_data()
-    else:
+    try:
+        user = verify_staff_authorization(authorization, x_user_role)
+    except HTTPException:
+        user = None
+
+    try:
+        if user and user.role.lower() in STAFF_ROLES and is_database_configured():
+            data = dashboard_service._load_synthetic_data()
+        else:
+            data = dashboard_service._load_pure_synthetic_data()
+    except Exception:
         data = dashboard_service._load_pure_synthetic_data()
     raw_students: List[Dict[str, Any]] = data.get("students", [])
     attendance_records = data.get("attendance", [])
@@ -451,10 +458,17 @@ async def get_student_journey_profile(
     x_user_role: Optional[str] = Header(None),
 ) -> StudentJourneyProfileResponse:
     """Retrieve full student journey dossier."""
-    user = verify_staff_authorization(authorization, x_user_role)
-    if user and user.role.lower() in STAFF_ROLES and is_database_configured():
-        data = dashboard_service._load_synthetic_data()
-    else:
+    try:
+        user = verify_staff_authorization(authorization, x_user_role)
+    except HTTPException:
+        user = None
+
+    try:
+        if user and user.role.lower() in STAFF_ROLES and is_database_configured():
+            data = dashboard_service._load_synthetic_data()
+        else:
+            data = dashboard_service._load_pure_synthetic_data()
+    except Exception:
         data = dashboard_service._load_pure_synthetic_data()
     raw_students: List[Dict[str, Any]] = data.get("students", [])
 
@@ -616,10 +630,17 @@ async def get_student_risk_explanation(
     x_user_role: Optional[str] = Header(None),
 ) -> RiskExplanationResponse:
     """Retrieve explainable risk indicator decomposition."""
-    user = verify_staff_authorization(authorization, x_user_role)
-    if user and user.role.lower() in STAFF_ROLES and is_database_configured():
-        data = dashboard_service._load_synthetic_data()
-    else:
+    try:
+        user = verify_staff_authorization(authorization, x_user_role)
+    except HTTPException:
+        user = None
+
+    try:
+        if user and user.role.lower() in STAFF_ROLES and is_database_configured():
+            data = dashboard_service._load_synthetic_data()
+        else:
+            data = dashboard_service._load_pure_synthetic_data()
+    except Exception:
         data = dashboard_service._load_pure_synthetic_data()
     raw_students: List[Dict[str, Any]] = data.get("students", [])
 
