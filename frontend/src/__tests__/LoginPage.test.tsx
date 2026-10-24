@@ -49,8 +49,8 @@ describe('LoginPage and Registration Flow Verification', () => {
     renderLoginPage();
 
     expect(screen.getByRole('heading', { level: 1, name: /Sign in to EduNexus AI/i })).toBeInTheDocument();
-    expect(screen.getByText(/Real Supabase Database Accounts/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/EduNexus@2026/i).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/Institutional Email$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
   });
 
   it('switches between Sign In and Create Account / Register tabs', async () => {
@@ -90,20 +90,17 @@ describe('LoginPage and Registration Flow Verification', () => {
     });
   });
 
-  it('fills verified real credentials into the Sign In form when clicked', async () => {
+  it('allows instant evaluation sign-in via quick role preview', async () => {
     renderLoginPage();
 
-    const fillButtons = screen.getAllByRole('button', { name: /Fill into Form/i });
-    expect(fillButtons.length).toBeGreaterThan(0);
+    const quickButtons = screen.getAllByRole('button', { name: /Administrator/i });
+    expect(quickButtons.length).toBeGreaterThan(0);
+    fireEvent.click(quickButtons[0]);
 
-    // Click the first fill button (admin)
-    fireEvent.click(fillButtons[0]);
-
-    const emailInput = screen.getByLabelText(/Institutional Email$/i) as HTMLInputElement;
-    const passwordInput = screen.getByLabelText(/^Password$/i) as HTMLInputElement;
-
-    expect(emailInput.value).toBe('admin@edunexus.ai');
-    expect(passwordInput.value).toBe('EduNexus@2026');
+    expect(mockAuth.signIn).toHaveBeenCalledWith(
+      'edunexus-demo-admin-token',
+      expect.objectContaining({ role: 'admin', email: 'admin@edunexus.ai' })
+    );
   });
 
   it('switches to login form and shows registration success message after registration', async () => {

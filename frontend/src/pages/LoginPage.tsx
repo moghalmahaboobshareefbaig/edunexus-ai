@@ -4,7 +4,6 @@ import {
   GraduationCap,
   ArrowRight,
   ShieldAlert,
-  ShieldCheck,
   Eye,
   EyeOff,
   Lock,
@@ -17,7 +16,6 @@ import {
   LogOut,
   Sparkles,
   Database,
-  KeyRound,
   UserPlus,
   LogIn,
   Check,
@@ -151,8 +149,8 @@ export function LoginPage() {
 
   // Sign-in form state
   const [selectedRole, setSelectedRole] = useState<UserRole>('advisor');
-  const [email, setEmail] = useState<string>('advisor@edunexus.ai');
-  const [password, setPassword] = useState<string>('EduNexus@2026');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -174,7 +172,6 @@ export function LoginPage() {
   const [checkingDb, setCheckingDb] = useState<boolean>(false);
 
   const supabaseConfigured = typeof isSupabaseConfigured === 'function' && isSupabaseConfigured();
-  const currentRoleConfig = roleOptions.find((r) => r.id === selectedRole) || roleOptions[0];
 
   // Probe live database connectivity
   const probeDatabase = async () => {
@@ -198,26 +195,6 @@ export function LoginPage() {
     probeDatabase();
   }, []);
 
-  const handleRoleChange = (newRole: UserRole) => {
-    setSelectedRole(newRole);
-    const target = roleOptions.find((r) => r.id === newRole);
-    if (target) {
-      setEmail(target.email);
-      setPassword(target.defaultPass);
-    }
-    setError('');
-    setSuccessMessage('');
-  };
-
-  const handleFillCredentials = (credRole: RoleOption) => {
-    setActiveTab('signin');
-    setSelectedRole(credRole.id);
-    setEmail(credRole.email);
-    setPassword(credRole.defaultPass);
-    setError('');
-    setSuccessMessage(`Loaded verified credentials for ${credRole.label}. Ready to sign in!`);
-  };
-
   const handleCredentialsSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!email.trim() || !password) {
@@ -230,6 +207,9 @@ export function LoginPage() {
     setSuccessMessage('');
 
     try {
+      const matchingRole =
+        roleOptions.find((r) => r.email.toLowerCase() === email.trim().toLowerCase())?.id || selectedRole || 'advisor';
+
       if (supabaseConfigured) {
         // Attempt real Supabase authentication first
         const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -245,10 +225,10 @@ export function LoginPage() {
         const token = data.session?.access_token;
         if (!token) throw new Error('Authentication provider did not issue an access token.');
 
-        signIn(token, { role: selectedRole, email: email.trim() });
+        signIn(token, { role: matchingRole, email: email.trim() });
       } else {
         // Local prototype fallback
-        const target = roleOptions.find((r) => r.id === selectedRole) || roleOptions[0];
+        const target = roleOptions.find((r) => r.id === matchingRole) || roleOptions[0];
         signIn(target.token, {
           role: target.id,
           email: email.trim(),
@@ -454,47 +434,6 @@ export function LoginPage() {
           </div>
         )}
 
-        {/* Real Live Supabase Credentials Banner */}
-        <div className="p-4 rounded-xl border border-indigo-200 dark:border-[#204030] bg-indigo-50/50 dark:bg-[#13221b]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-indigo-600 dark:text-[#56B594]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-950 dark:text-[#E2ECE6]">
-                Real Supabase Database Accounts (Ready & Active)
-              </span>
-            </div>
-            <span className="text-[11px] text-slate-600 dark:text-[#8FA89B]">
-              Master Password for all pre-seeded accounts: <code className="font-mono font-bold text-indigo-700 dark:text-[#56B594] px-1.5 py-0.5 bg-white dark:bg-[#1D2722] rounded border border-indigo-200 dark:border-[#2D4539]">EduNexus@2026</code>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-            {roleOptions.map((role) => (
-              <div
-                key={role.id}
-                className="p-2.5 rounded-lg border border-slate-200 dark:border-[#283830] bg-white dark:bg-[#18231e] flex flex-col justify-between gap-2 shadow-2xs hover:border-indigo-400 dark:hover:border-[#56B594] transition-colors"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs font-bold text-slate-800 dark:text-[#E2ECE6]">{role.label}</span>
-                    <span className="text-[9px] font-semibold px-1.5 py-0.2 bg-slate-100 dark:bg-[#25322B] text-slate-600 dark:text-[#8FA89B] rounded">
-                      {role.badge}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-[#8FA89B] truncate mt-0.5">{role.email}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleFillCredentials(role)}
-                  className="w-full py-1 px-2 text-[11px] font-semibold bg-indigo-50 dark:bg-[#1B3226] text-indigo-700 dark:text-[#56B594] hover:bg-indigo-600 hover:text-white dark:hover:bg-[#224433] rounded transition-colors text-center"
-                >
-                  Fill into Form
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Main Grid: Authentication Tabs & Forms on Left, Quick Previews on Right */}
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           {/* Left Column: Sign-in / Registration Card */}
@@ -572,83 +511,10 @@ export function LoginPage() {
                   Sign in to EduNexus AI
                 </h1>
                 <p className="mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-[#CBD5CF]">
-                  Select your institutional role to access analytics, student dossiers, or personal academic journey.
+                  Enter your institutional email and password to access your workspace.
                 </p>
 
                 <form onSubmit={handleCredentialsSubmit} className="mt-6 space-y-5">
-                  {/* Role Selection Tabs / Selector */}
-                  <div>
-                    <label
-                      htmlFor="user-role-select"
-                      className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-[#CBD5CF] mb-2"
-                    >
-                      Select Institutional Role
-                    </label>
-
-                    {/* 4 Interactive Role Buttons */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                      {roleOptions.map((role) => {
-                        const Icon = role.icon;
-                        const isSelected = selectedRole === role.id;
-                        return (
-                          <button
-                            key={role.id}
-                            type="button"
-                            onClick={() => handleRoleChange(role.id)}
-                            className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
-                              isSelected
-                                ? 'border-indigo-600 bg-indigo-50/70 text-indigo-950 dark:border-[#56B594] dark:bg-[#18352A] dark:text-[#E2ECE6] font-semibold ring-2 ring-indigo-500/20'
-                                : 'border-slate-200 dark:border-[#35433B] bg-slate-50/50 dark:bg-[#1D2722] text-slate-600 dark:text-[#CBD5CF] hover:border-slate-300 dark:hover:border-[#4A5D52]'
-                            }`}
-                          >
-                            <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? 'text-indigo-600 dark:text-[#56B594]' : 'text-slate-500'}`} />
-                            <span className="text-xs leading-tight">{role.label}</span>
-                            {role.isReadOnly && (
-                              <span className="mt-1 text-[9px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-1 py-0.2 rounded">
-                                Read-Only
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Dropdown for role selection */}
-                    <select
-                      id="user-role-select"
-                      name="role"
-                      value={selectedRole}
-                      onChange={(e) => handleRoleChange(e.target.value as UserRole)}
-                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 dark:border-[#35433B] dark:bg-[#1D2722] dark:text-[#E2ECE6] focus:border-indigo-500 focus:outline-none"
-                      aria-label="Institutional Role Selection"
-                    >
-                      <option value="admin">Administrator (admin@edunexus.ai) - Full Platform Governance</option>
-                      <option value="advisor">Academic Advisor (advisor@edunexus.ai) - Support Plans & Overrides</option>
-                      <option value="faculty">Faculty Member (faculty@edunexus.ai) - Course Reviews & Mentoring</option>
-                      <option value="student">Student (student@edunexus.ai) - Strictly Read-Only Access</option>
-                    </select>
-                  </div>
-
-                  {/* Dynamic Status / Permission Notice */}
-                  {currentRoleConfig.isReadOnly ? (
-                    <div className="flex items-start gap-2.5 p-3.5 rounded-lg border border-amber-300/80 bg-amber-50/90 dark:border-amber-900/50 dark:bg-[#2A2315] text-amber-900 dark:text-amber-200 text-xs">
-                      <Lock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                      <div>
-                        <span className="font-semibold block sm:inline">Student Read-Only Mode Enforced: </span>
-                        Students have read-only access to view performance, radar domains, and support plans.
-                        Modifications and CSV data imports are strictly disabled.
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-2.5 p-3 rounded-lg border border-emerald-300/80 bg-emerald-50/80 dark:border-[#1D4633] dark:bg-[#142820] text-emerald-900 dark:text-[#83D9A9] text-xs">
-                      <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600 dark:text-[#56B594] mt-0.5" />
-                      <div>
-                        <span className="font-semibold block sm:inline">{currentRoleConfig.label} Access: </span>
-                        Authorized for student success tracking, intervention planning, and domain reviews.
-                      </div>
-                    </div>
-                  )}
-
                   {/* Institutional Email Field */}
                   <div>
                     <label
@@ -672,17 +538,12 @@ export function LoginPage() {
 
                   {/* Institutional Password Field */}
                   <div>
-                    <div className="flex items-center justify-between">
-                      <label
-                        htmlFor="institutional-password"
-                        className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-[#CBD5CF]"
-                      >
-                        Password
-                      </label>
-                      <span className="text-[11px] text-slate-500 dark:text-[#8FA89B]">
-                        Live password: <span className="font-mono font-semibold text-indigo-600 dark:text-[#56B594]">EduNexus@2026</span>
-                      </span>
-                    </div>
+                    <label
+                      htmlFor="institutional-password"
+                      className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-[#CBD5CF]"
+                    >
+                      Password
+                    </label>
                     <div className="relative mt-1.5">
                       <input
                         id="institutional-password"
@@ -712,7 +573,7 @@ export function LoginPage() {
                     disabled={submitting}
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors shadow-xs"
                   >
-                    {submitting ? 'Authenticating with Supabase…' : `Sign In as ${currentRoleConfig.label}`}
+                    {submitting ? 'Authenticating with Supabase…' : 'Sign In'}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </form>
