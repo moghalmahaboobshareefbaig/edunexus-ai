@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
-    "dev": "cd frontend && npm run dev",
+    "start": "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}",
+    "dev": "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}",
     "test": "cd frontend && npm test"
   }
 }

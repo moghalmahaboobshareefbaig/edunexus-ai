@@ -24,10 +24,11 @@ def create_application() -> FastAPI:
         openapi_url="/openapi.json",
     )
 
-    # Configure CORS
+    # Configure CORS - allows local development origins and any Render-deployed frontend
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
+        allow_origin_regex=r"^https://.*\.onrender\.com$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -36,7 +37,7 @@ def create_application() -> FastAPI:
     # Register global uniform error handlers
     setup_exception_handlers(app)
 
-    # Root health check endpoint (as specified: GET /health)
+    # Root health check endpoint (GET /health)
     @app.get(
         "/health",
         response_model=HealthResponse,
@@ -74,7 +75,6 @@ def create_application() -> FastAPI:
             message=str(info.get("message", "Database check completed")),
             environment=settings.ENVIRONMENT,
         )
-
 
     # Root index endpoint
     @app.get("/", tags=["System"], summary="API Root")
